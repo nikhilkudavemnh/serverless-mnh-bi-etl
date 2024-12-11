@@ -129,3 +129,4 @@ async def etl_runner(src_schema_name: str, dst_schema_name: str):
         return etl_results
     except Exception as e:
         logger.error(f"Error running positions ETL: {e}")
+        raise Exception(f"Error running positions ETL: {e}")

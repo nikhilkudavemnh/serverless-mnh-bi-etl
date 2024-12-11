@@ -132,3 +132,4 @@ async def etl_runner(src_schema_name: str, dst_schema_name: str):
         return etl_results
     except Exception as e:
         logger.error(f"Error running qualifiedapps ETL: {e}, batches:{batch}")
+        raise Exception(f"Error running qualifiedapps ETL: {e}, batches:{batch}")
