@@ -111,7 +111,7 @@ def load_data(schema_name, transformed_data):
         query = query.format(schema_name=schema_name, columns=', '.join(columns),
                              update_columns=update_columns)
         insert_records_in_db(query, schema_name, values)
-        return {"jobStatus": "Success"}
+        return "Success"
     except Exception as e:
         logger.error(f"Error loading positions data in database: {e}")
         raise Exception(f"Error loading positions data in database: {e}")
@@ -132,9 +132,9 @@ def etl_runner(src_schema_name: str, dst_schema_name: str):
                 extracted_data = extract_data(src_schema_name, batch)
                 transformed_data = transform_data(extracted_data)
                 response = load_data(dst_schema_name, transformed_data)
-                etl_results.append(response)
+                etl_results.append({'jobStatus': response, 'batch': f"{index}-{index + batch_size}"})
         else:
-            etl_results.append({"jobStatus": "Success"})
+            etl_results.append({"jobStatus": "Success", "batch": ""})
         return etl_results
     except Exception as e:
         logger.error(f"Error running positions ETL: {e}")
