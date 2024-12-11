@@ -28,5 +28,5 @@ COLUMNS_REPOSITORY = {
 }
 
 UPDATE_QUERIES_REPOSITORY = {
-    "insert_update_query": """INSERT INTO {schema_name}.qualified_apls ({columns}) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, $s, %s) ON CONFLICT (apl_id) DO UPDATE SET {update_columns};"""
+    "insert_update_query": """INSERT INTO {schema_name}.qualified_apls ({columns}) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT (apl_id) DO UPDATE SET {update_columns};"""
 }
