@@ -29,6 +29,6 @@ COLUMNS_REPOSITORY = {
 }
 
 UPDATE_QUERIES_REPOSITORY = {
-    "insert_update_query": """INSERT INTO {schema_name}.position ({columns}) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) 
+    "insert_update_query": """INSERT INTO {schema_name}.position ({columns}) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) 
     ON CONFLICT (pid) DO UPDATE SET {update_columns};"""
 }

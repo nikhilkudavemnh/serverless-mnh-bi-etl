@@ -1,79 +1,100 @@
-import asyncpg
+import psycopg2
+from psycopg2 import pool
 from custom_logging import logger
 import os
+
 SRC_POOL = None
 TGT_POOL = None
-SRC_HOST = os.environ.get('SRC_HOST')
-SRC_PASSWORD = os.environ.get('SRC_PASSWORD')
-SRC_USER = os.environ.get('SRC_USER')
-TGT_HOST = os.environ.get('TGT_HOST')
-TGT_PASSWORD = os.environ.get('TGT_PASSWORD')
-TGT_USER = os.environ.get('TGT_USER')
 
-async def create_src_pool():
+# Fetch environment variables
+SRC_HOST = os.environ.get('SRC_HOST', '').strip()
+SRC_PASSWORD = os.environ.get('SRC_PASSWORD', '').strip()
+SRC_USER = os.environ.get('SRC_USER', '').strip()
+TGT_HOST = os.environ.get('TGT_HOST', '').strip()
+TGT_PASSWORD = os.environ.get('TGT_PASSWORD', '').strip()
+TGT_USER = os.environ.get('TGT_USER', '').strip()
+
+
+def create_src_pool():
     global SRC_POOL
     try:
-        if not SRC_POOL:
-            SRC_POOL = await asyncpg.create_pool(
-                user=SRC_USER,
-                password=SRC_PASSWORD,
-                database="smaclifydb",
-                host=SRC_HOST,
-                min_size=10,
-                max_size=20
-            )
+        SRC_POOL = psycopg2.pool.ThreadedConnectionPool(
+            minconn=10,
+            maxconn=20,
+            user=SRC_USER,
+            password=SRC_PASSWORD,
+            database="smaclifydb",
+            host=SRC_HOST
+        )
         return SRC_POOL
     except Exception as e:
-        logger.error(f"Error creating target pool: {e}")
-        raise Exception("Error creating target pool")
+        logger.error(f"Error creating source pool: {e}")
+        raise Exception("Error creating source connection pool") from e
 
 
-async def create_tgt_pool():
+if not SRC_POOL:
+    create_src_pool()
+    logger.info("Source connection pool created successfully")
+
+
+def create_tgt_pool():
     global TGT_POOL
     try:
         if not TGT_POOL:
-            TGT_POOL = await asyncpg.create_pool(
+            TGT_POOL = psycopg2.pool.ThreadedConnectionPool(
+                minconn=10,
+                maxconn=20,
                 user=TGT_USER,
                 password=TGT_PASSWORD,
                 database="smaclify_bi_db",
-                host=TGT_HOST,
-                min_size=10,
-                max_size=20
+                host=TGT_HOST
             )
         return TGT_POOL
     except Exception as e:
         logger.error(f"Error creating target pool: {e}")
-        raise Exception("Error creating target pool")
+        raise Exception("Error creating target connection pool") from e
 
 
-async def fetch_records_from_db(query: str, schema_name: str):
+if not TGT_POOL:
+    create_tgt_pool()
+    logger.info("Target connection pool created successfully")
+
+
+def fetch_records_from_db(query: str, schema_name: str):
     try:
-        src_pool = await create_src_pool()
-        async with src_pool.acquire() as connection:
+        connection = SRC_POOL.getconn()
+        try:
+            cursor = connection.cursor()
             if schema_name:
-                await connection.fetch(f"SET search_path to {schema_name};")
+                cursor.execute(f"SET search_path TO {schema_name};")
             else:
-                raise Exception("Tenant identifier is mandatory")
-            records = await connection.fetch(query)
-            return [dict(record) for record in records] if records else []
+                raise ValueError("Schema name (tenant identifier) is mandatory")
+
+            cursor.execute(query)
+            records = cursor.fetchall()
+            column_names = [desc[0] for desc in cursor.description]
+            return records, column_names
+        finally:
+            SRC_POOL.putconn(connection)
     except Exception as e:
-        logger.error(f"Error fetching records: {e}")
-
-        print(f"Error fetching records as: {e}")
-        print(query)
-        raise Exception(f"Error fetching records as: {e}")
+        logger.error(f"Error fetching records: {e}, Query: {query}")
+        raise Exception(f"Error fetching records: {e}") from e
 
 
-async def insert_records_in_db(query: str, schema_name: str, values: list):
+def insert_records_in_db(query: str, schema_name: str, values: list):
     try:
-        tgt_pool = await create_tgt_pool()
-        async with tgt_pool.acquire() as connection:
+        connection = TGT_POOL.getconn()
+        try:
+            cursor = connection.cursor()
             if schema_name:
-                await connection.fetch(f"SET search_path to {schema_name};")
+                cursor.execute(f"SET search_path TO {schema_name};")
             else:
-                raise Exception("Tenant identifier is mandatory")
-            records = await connection.executemany(query, values)
-            return records
+                raise ValueError("Schema name (tenant identifier) is mandatory")
+            cursor.executemany(query, values)
+            connection.commit()
+            return cursor.rowcount
+        finally:
+            TGT_POOL.putconn(connection)
     except Exception as e:
-        logger.error(f"Error inserting records: {e}, query:{query}")
-        raise Exception(f"Error inserting records as:{e}")
+        logger.error(f"Error inserting records: {e}, Query: {query}")
+        raise Exception(f"Error inserting records: {e}") from e

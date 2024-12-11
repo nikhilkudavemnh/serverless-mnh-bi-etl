@@ -1,7 +1,6 @@
 from main import etl_runner
 from custom_logging import logger
 import time
-import asyncio
 
 async def lambda_handler(event: dict, context: dict):
     logger.info(f"Received event: {event}")
