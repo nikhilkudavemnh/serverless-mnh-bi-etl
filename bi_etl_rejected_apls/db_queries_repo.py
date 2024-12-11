@@ -19,6 +19,6 @@ COLUMNS_REPOSITORY = {
 }
 
 UPDATE_QUERIES_REPOSITORY = {
-    "insert_update_query": """INSERT INTO {schema_name}.rejected_apls ({columns}) VALUES ($1, $2, $3, $4, $5, $6) 
+    "insert_update_query": """INSERT INTO {schema_name}.rejected_apls ({columns}) VALUES (%s, %s, %s, %s, %s, %s)
     ON CONFLICT (apl_id) DO UPDATE SET {update_columns};"""
 }

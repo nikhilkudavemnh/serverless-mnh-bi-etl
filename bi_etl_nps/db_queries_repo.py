@@ -20,6 +20,6 @@ COLUMNS_REPOSITORY = {
 }
 
 UPDATE_QUERIES_REPOSITORY = {
-    "insert_update_query": """INSERT INTO {schema_name}.nps ({columns}) VALUES ($1, $2, $3, $4, $5, $6,$7) 
+    "insert_update_query": """INSERT INTO {schema_name}.nps ({columns}) VALUES (%s, %s, %s, %s, %s, %s, %s)
     ON CONFLICT (eval_id) DO UPDATE SET {update_columns};"""
 }
