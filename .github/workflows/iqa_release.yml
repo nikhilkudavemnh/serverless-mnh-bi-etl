@@ -39,6 +39,8 @@ jobs:
               - 'bi_etl_qualified_apls/**'
             bi_etl_rejected_apls:
               - 'bi_etl_rejected_apls/**'
+            bi_etl_test:
+              - 'bi_etl_test/**'
 
       - name: BI Applications etl
         if: steps.filter.outputs.bi_etl_nps == 'true'
