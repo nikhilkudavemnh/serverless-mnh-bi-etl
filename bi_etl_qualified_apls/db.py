@@ -5,9 +5,9 @@ SRC_POOL = None
 SRC_HOST = os.environ.get('SRC_HOST')
 SRC_PASSWORD = os.environ.get('SRC_PASSWORD')
 SRC_USER = os.environ.get('SRC_USER')
-TGT_HOST = os.environ.get('TAR_HOST')
-TGT_PASSWORD = os.environ.get('TAR_PASSWORD')
-TGT_USER = os.environ.get('TAR_USER')
+TGT_HOST = os.environ.get('TGT_HOST')
+TGT_PASSWORD = os.environ.get('TGT_PASSWORD')
+TGT_USER = os.environ.get('TGT_USER')
 
 async def create_src_pool():
     global SRC_POOL

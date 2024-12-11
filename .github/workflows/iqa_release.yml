@@ -53,7 +53,7 @@ jobs:
         if: steps.filter.outputs.bi_etl_nps == 'true'
         run: |
           mkdir -p bi_etl_nps/build
-          pip install requests -t bi_etl_nps/build
+          pip install -r bi_etl_nps/requirements.txt -t bi_etl_nps/build
 
       - name: Copy bi_etl_applications code and dependencies to build folder
         if: steps.filter.outputs.bi_etl_nps == 'true'
@@ -84,7 +84,7 @@ jobs:
         if: steps.filter.outputs.bi_etl_positions == 'true'
         run: |
           mkdir -p bi_etl_positions/build
-          pip install requests -t bi_etl_positions/build
+          pip install -r bi_etl_positions/requirements.txt -t bi_etl_positions/build
 
       - name: Copy bi_etl_positions code and dependencies to build folder
         if: steps.filter.outputs.bi_etl_positions == 'true'
@@ -115,7 +115,7 @@ jobs:
         if: steps.filter.outputs.bi_etl_qualified_apls == 'true'
         run: |
           mkdir -p bi_etl_qualified_apls/build
-          pip install requests -t bi_etl_qualified_apls/build
+          pip install -r bi_etl_qualified_apls/requirements.txt -t bi_etl_qualified_apls/build
 
       - name: Copy bi_etl_qualified_apls code and dependencies to build folder
         if: steps.filter.outputs.bi_etl_qualified_apls == 'true'
@@ -146,7 +146,7 @@ jobs:
         if: steps.filter.outputs.bi_etl_rejected_apls == 'true'
         run: |
           mkdir -p bi_etl_rejected_apls/build
-          pip install requests -t bi_etl_rejected_apls/build
+          pip install -r bi_etl_rejected_apls/requirements.txt -t bi_etl_rejected_apls/build
 
       - name: Copy bi_etl_rejected_apls code and dependencies to build folder
         if: steps.filter.outputs.bi_etl_rejected_apls == 'true'
