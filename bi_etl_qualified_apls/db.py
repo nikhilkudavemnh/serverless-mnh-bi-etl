@@ -19,8 +19,8 @@ def create_src_pool():
     global SRC_POOL
     try:
         SRC_POOL = psycopg2.pool.ThreadedConnectionPool(
-            minconn=10,
-            maxconn=20,
+            minconn=2,
+            maxconn=4,
             user=SRC_USER,
             password=SRC_PASSWORD,
             database="smaclifydb",

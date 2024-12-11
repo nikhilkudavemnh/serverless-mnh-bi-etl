@@ -42,8 +42,8 @@ def create_tgt_pool():
     try:
         if not TGT_POOL:
             TGT_POOL = psycopg2.pool.ThreadedConnectionPool(
-                minconn=10,
-                maxconn=20,
+                minconn=2,
+                maxconn=4,
                 user=TGT_USER,
                 password=TGT_PASSWORD,
                 database="smaclify_bi_db",
