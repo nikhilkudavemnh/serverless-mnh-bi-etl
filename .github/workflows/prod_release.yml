@@ -1,0 +1,169 @@
+name: PROD-Lipsync-detection
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    if: github.event.release.target_commitish == 'main'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::773987512369:role/GitHubActionsRole
+          aws-region: us-west-2
+
+      - name: Verify AWS Connection
+        run: aws sts get-caller-identity
+
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          base: ${{github.ref}}
+          filters: |
+            bi_etl_nps:
+            - 'bi_etl_nps/**'
+            bi_etl_positions:
+            - 'bi_etl_positions/**'
+            bi_etl_qualified_apls:
+            - 'bi_etl_qualified_apls/**'
+            bi_etl_rejected_apls:
+            - 'bi_etl_rejected_apls/**'
+
+            - name: BI Applications etl
+              if: steps.filter.outputs.bi_etl_nps == 'true'
+              run: echo "bi_etl_nps was updated!"
+
+            - name: Set up Python for bi_etl_nps
+              if: steps.filter.outputs.bi_etl_nps == 'true'
+              uses: actions/setup-python@v4
+              with:
+                python-version: '3.10'
+            - name: Install dependencies for bi_etl_applications
+              if: steps.filter.outputs.bi_etl_nps == 'true'
+              run: |
+                mkdir -p bi_etl_nps/build
+                pip install requests -t bi_etl_nps/build
+
+            - name: Copy bi_etl_applications code and dependencies to build folder
+              if: steps.filter.outputs.bi_etl_nps == 'true'
+              run: |
+                cp bi_etl_nps/*.py bi_etl_nps/build/
+
+            - name: Package bi_etl_nps
+              if: steps.filter.outputs.bi_etl_nps == 'true'
+              run: |
+                cd bi_etl_nps/build
+                zip -r ../../bi_etl_nps.zip .
+
+            - name: Deploy bi_etl_nps layer to S3
+              if: steps.filter.outputs.bi_etl_nps == 'true'
+              run: |
+                aws s3 cp bi_etl_nps.zip s3://prod-us1-s3-builds/serverless-mnh-bi-etl/prod/bi_etl_nps.zip
+
+            - name: BI positions etl
+              if: steps.filter.outputs.bi_etl_positions == 'true'
+              run: echo "bi_etl_positions was updated!"
+
+            - name: Set up Python for bi_etl_positions
+              if: steps.filter.outputs.bi_etl_positions == 'true'
+              uses: actions/setup-python@v4
+              with:
+                python-version: '3.10'
+            - name: Install dependencies for bi_etl_positions
+              if: steps.filter.outputs.bi_etl_positions == 'true'
+              run: |
+                mkdir -p bi_etl_positions/build
+                pip install requests -t bi_etl_positions/build
+
+            - name: Copy bi_etl_positions code and dependencies to build folder
+              if: steps.filter.outputs.bi_etl_positions == 'true'
+              run: |
+                cp bi_etl_positions/*.py bi_etl_positions/build/
+
+            - name: Package bi_etl_positions
+              if: steps.filter.outputs.bi_etl_positions == 'true'
+              run: |
+                cd bi_etl_positions/build
+                zip -r ../../bi_etl_positions.zip .
+
+            - name: Deploy bi_etl_positions layer to S3
+              if: steps.filter.outputs.bi_etl_positions == 'true'
+              run: |
+                aws s3 cp bi_etl_positions.zip s3://prod-us1-s3-builds/serverless-mnh-bi-etl/prod/bi_etl_positions.zip
+
+            - name: BI bi_etl_qualified_apls etl
+              if: steps.filter.outputs.bi_etl_qualified_apls == 'true'
+              run: echo "bi_etl_qualified_apls was updated!"
+
+            - name: Set up Python for bi_etl_positions
+              if: steps.filter.outputs.bi_etl_qualified_apls == 'true'
+              uses: actions/setup-python@v4
+              with:
+                python-version: '3.10'
+            - name: Install dependencies for bi_etl_qualified_apls
+              if: steps.filter.outputs.bi_etl_qualified_apls == 'true'
+              run: |
+                mkdir -p bi_etl_qualified_apls/build
+                pip install requests -t bi_etl_qualified_apls/build
+
+            - name: Copy bi_etl_qualified_apls code and dependencies to build folder
+              if: steps.filter.outputs.bi_etl_qualified_apls == 'true'
+              run: |
+                cp bi_etl_qualified_apls/*.py bi_etl_qualified_apls/build/
+
+            - name: Package bi_etl_qualified_apls
+              if: steps.filter.outputs.bi_etl_qualified_apls == 'true'
+              run: |
+                cd bi_etl_qualified_apls/build
+                zip -r ../../bi_etl_qualified_apls.zip .
+
+            - name: Deploy bi_etl_qualified_apls layer to S3
+              if: steps.filter.outputs.bi_etl_qualified_apls == 'true'
+              run: |
+                aws s3 cp bi_etl_qualified_apls.zip s3://prod-us1-s3-builds/serverless-mnh-bi-etl/prod/bi_etl_qualified_apls.zip
+
+            - name: BI bi_etl_rejected_apls etl
+              if: steps.filter.outputs.bi_etl_rejected_apls == 'true'
+              run: echo "bi_etl_rejected_apls was updated!"
+
+            - name: Set up Python for bi_etl_rejected_apls
+              if: steps.filter.outputs.bi_etl_rejected_apls == 'true'
+              uses: actions/setup-python@v4
+              with:
+                python-version: '3.10'
+            - name: Install dependencies for bi_etl_rejected_apls
+              if: steps.filter.outputs.bi_etl_rejected_apls == 'true'
+              run: |
+                mkdir -p bi_etl_rejected_apls/build
+                pip install requests -t bi_etl_rejected_apls/build
+
+            - name: Copy bi_etl_rejected_apls code and dependencies to build folder
+              if: steps.filter.outputs.bi_etl_rejected_apls == 'true'
+              run: |
+                cp bi_etl_rejected_apls/*.py bi_etl_rejected_apls/build/
+
+            - name: Package bi_etl_rejected_apls
+              if: steps.filter.outputs.bi_etl_rejected_apls == 'true'
+              run: |
+                cd bi_etl_rejected_apls/build
+                zip -r ../../bi_etl_rejected_apls.zip .
+
+            - name: Deploy bi_etl_rejected_apls layer to S3
+              if: steps.filter.outputs.bi_etl_rejected_apls == 'true'
+              run: |
+                aws s3 cp bi_etl_rejected_apls.zip s3://prod-us1-s3-builds/serverless-mnh-bi-etl/prod/bi_etl_rejected_apls.zip          
+        
