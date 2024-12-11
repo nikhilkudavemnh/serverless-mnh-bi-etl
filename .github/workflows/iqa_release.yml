@@ -163,3 +163,34 @@ jobs:
         if: steps.filter.outputs.bi_etl_rejected_apls == 'true'
         run: |
           aws s3 cp bi_etl_rejected_apls.zip s3://lambda-layers-storage-123/serverless-mnh-bi-etl/iqa/bi_etl_rejected_apls.zip          
+
+      - name: BI bi_etl_test etl
+        if: steps.filter.outputs.bi_etl_test == 'true'
+        run: echo "bi_etl_test was updated!"
+
+      - name: Set up Python for bi_etl_test
+        if: steps.filter.outputs.bi_etl_test == 'true'
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install dependencies for bi_etl_test
+        if: steps.filter.outputs.bi_etl_test == 'true'
+        run: |
+          mkdir -p bi_etl_test/build
+          pip install -r bi_etl_test/requirements.txt -t bi_etl_test/build
+
+      - name: Copy bi_etl_test code and dependencies to build folder
+        if: steps.filter.outputs.bi_etl_test == 'true'
+        run: |
+          cp bi_etl_test/*.py bi_etl_test/build/
+
+      - name: Package bi_etl_test
+        if: steps.filter.outputs.bi_etl_test == 'true'
+        run: |
+          cd bi_etl_test/build
+          zip -r ../../bi_etl_test.zip .
+
+      - name: Deploy bi_etl_test layer to S3
+        if: steps.filter.outputs.bi_etl_test == 'true'
+        run: |
+          aws s3 cp bi_etl_test.zip s3://lambda-layers-storage-123/serverless-mnh-bi-etl/iqa/bi_etl_test.zip          
