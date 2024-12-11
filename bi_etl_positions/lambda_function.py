@@ -3,7 +3,7 @@ from custom_logging import logger
 import time
 import asyncio
 
-async def lambda_handler(event: dict, context: dict):
+async def async_handler(event: dict, context: dict):
     logger.info(f"Received event: {event}")
     start_time = time.time()
     src_schema_name = event.get('scrSchemaName')
@@ -24,3 +24,8 @@ async def lambda_handler(event: dict, context: dict):
                 "clientId": client_id,
                 "completedTime":  str(time.time()),
                 "schemaName": src_schema_name}
+
+
+def lambda_handler(event, context):
+    loop = asyncio.get_event_loop()
+    return loop.run_until_complete(async_handler(event, context))
