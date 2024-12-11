@@ -3,12 +3,12 @@ from custom_logging import logger
 import os
 SRC_POOL = None
 TGT_POOL = None
-SRC_HOST = os.environ.get('SRC_HOST')
-SRC_PASSWORD = os.environ.get('SRC_PASSWORD')
-SRC_USER = os.environ.get('SRC_USER')
-TGT_HOST = os.environ.get('TGT_HOST')
-TGT_PASSWORD = os.environ.get('TGT_PASSWORD')
-TGT_USER = os.environ.get('TGT_USER')
+SRC_HOST = os.environ.get('SRC_HOST').strip()
+SRC_PASSWORD = os.environ.get('SRC_PASSWORD').strip()
+SRC_USER = os.environ.get('SRC_USER').strip()
+TGT_HOST = os.environ.get('TGT_HOST').strip()
+TGT_PASSWORD = os.environ.get('TGT_PASSWORD').strip()
+TGT_USER = os.environ.get('TGT_USER').strip()
 
 async def create_src_pool():
     global SRC_POOL

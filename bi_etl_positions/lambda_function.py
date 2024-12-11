@@ -27,5 +27,4 @@ async def async_handler(event: dict, context: dict):
 
 
 def lambda_handler(event, context):
-    loop = asyncio.get_event_loop()
-    return loop.run_until_complete(async_handler(event, context))
+    return asyncio.run(async_handler(event, context))
