@@ -61,34 +61,43 @@ if not TGT_POOL:
 
 
 def fetch_records_from_db(query: str, schema_name: str):
-    with SRC_POOL.getconn() as connection:
-        try:
-            with connection.cursor() as cursor:
-                if schema_name:
-                    cursor.execute(f"SET search_path TO {schema_name};")
-                else:
-                    raise ValueError("Schema name (tenant identifier) is mandatory")
+    connection = None
+    try:
+        connection = SRC_POOL.getconn()
+        with connection.cursor() as cursor:
+            if schema_name:
+                cursor.execute(f"SET search_path TO {schema_name};")
+            else:
+                raise ValueError("Schema name (tenant identifier) is mandatory")
 
-                cursor.execute(query)
-                records = cursor.fetchall()
-                column_names = [desc[0] for desc in cursor.description]
-                return records, column_names
-        except Exception as e:
-            logger.error(f"Error fetching records: {e}, Query: {query}")
-            raise Exception(f"Error inserting records: {e}")
+            cursor.execute(query)
+            records = cursor.fetchall()
+            column_names = [desc[0] for desc in cursor.description]
+            return records, column_names
+    except Exception as e:
+        logger.error(f"Error fetching records: {e}, Query: {query}")
+        raise Exception(f"Error fetching records: {e}")
+    finally:
+        if connection:
+            SRC_POOL.putconn(connection)
 
 
 def insert_records_in_db(query: str, schema_name: str, values: list):
-    with TGT_POOL.getconn() as connection:
-        try:
-            with connection.cursor() as cursor:
-                if schema_name:
-                    cursor.execute(f"SET search_path TO {schema_name};")
-                else:
-                    raise ValueError("Schema name (tenant identifier) is mandatory")
-                cursor.executemany(query, values)
-                connection.commit()
-                return cursor.rowcount
-        except Exception as e:
-            logger.error(f"Error inserting records: {e}, Query: {query}")
-            raise Exception(f"Error inserting records: {e}")
+    connection = None
+    try:
+        connection = TGT_POOL.getconn()
+        with connection.cursor() as cursor:
+            if schema_name:
+                cursor.execute(f"SET search_path TO {schema_name};")
+            else:
+                raise ValueError("Schema name (tenant identifier) is mandatory")
+
+            cursor.executemany(query, values)
+            connection.commit()
+            return cursor.rowcount
+    except Exception as e:
+        logger.error(f"Error inserting records: {e}, Query: {query}")
+        raise Exception(f"Error inserting records: {e}")
+    finally:
+        if connection:
+            TGT_POOL.putconn(connection)
