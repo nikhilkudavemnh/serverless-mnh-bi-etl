@@ -1,2 +1,2 @@
-asyncpg
-asyncio
+psycopg2-binary
+boto3
