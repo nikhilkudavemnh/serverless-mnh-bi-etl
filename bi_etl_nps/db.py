@@ -40,7 +40,7 @@ def get_ssm_secret(parameter_name):
     )
 
 
-def create_src_pool(SRC_USER, SRC_PASSWORD, SRC_HOST):
+def create_src_pool(SRC_HOST, SRC_PASSWORD, SRC_USER):
     global SRC_POOL
     try:
         SRC_POOL = psycopg2.pool.ThreadedConnectionPool(
@@ -65,7 +65,7 @@ if not SRC_POOL:
     logger.info("Source connection pool created successfully")
 
 
-def create_tgt_pool(TGT_USER, TGT_PASSWORD, TGT_HOST):
+def create_tgt_pool(TGT_HOST, TGT_PASSWORD, TGT_USER):
     global TGT_POOL
     try:
         if not TGT_POOL:

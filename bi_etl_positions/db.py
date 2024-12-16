@@ -3,21 +3,24 @@ from psycopg2 import pool
 from custom_logging import logger
 import os
 import boto3
+import json
 
 SRC_POOL = None
 TGT_POOL = None
 
-iqaCredList = ["/iqa/serverless-mnh-bi-etl/smaclifydb/readonly/url",
-               "/iqa/wowreports/smaclifydb/readonly/password",
-               "/iqa/wowreports/smaclifydb/readonly/username",
-               "/iqa/bi_etl/smaclify_bi_db/readwrite/password",
-               "/iqa/bi_etl/smaclify_bi_db/readwrite/username"]
+iqaCredList = [
+    "/iqa/wowreports/smaclifydb/readonly/url",
+    "/iqa/wowreports/smaclifydb/readonly/password",
+    "/iqa/wowreports/smaclifydb/readonly/username",
+    "/iqa-us1/mnh-superset/smaclify_bi_db/credentials"
+]
 
-prodCredList = ["/prod/serverless-mnh-bi-etl/smaclifydb/readonly/url",
-                "/prod/wowreports/smaclifydb/readonly/password",
-                "/prod/wowreports/smaclifydb/readonly/username",
-                "/prod/bi_etl/smaclify_bi_db/readwrite/password",
-                "/prod/bi_etl/smaclify_bi_db/readwrite/username"]
+prodCredList = [
+    "/prod/wowreports/smaclifydb/readonly/url",
+    "/prod/wowreports/smaclifydb/readonly/password",
+    "/prod/wowreports/smaclifydb/readonly/username",
+    "/pord-us1/mnh-superset/smaclify_bi_db/credentials"
+]
 
 ssm = boto3.client("ssm", region_name='us-west-2')
 ETL_ENV = os.environ.get('ETL_ENV', '').strip()
@@ -37,7 +40,7 @@ def get_ssm_secret(parameter_name):
     )
 
 
-def create_src_pool(SRC_USER, SRC_PASSWORD, SRC_HOST):
+def create_src_pool(SRC_HOST, SRC_PASSWORD, SRC_USER):
     global SRC_POOL
     try:
         SRC_POOL = psycopg2.pool.ThreadedConnectionPool(
@@ -62,7 +65,7 @@ if not SRC_POOL:
     logger.info("Source connection pool created successfully")
 
 
-def create_tgt_pool(TGT_USER, TGT_PASSWORD, TGT_HOST):
+def create_tgt_pool(TGT_HOST, TGT_PASSWORD, TGT_USER):
     global TGT_POOL
     try:
         if not TGT_POOL:
@@ -82,9 +85,10 @@ def create_tgt_pool(TGT_USER, TGT_PASSWORD, TGT_HOST):
 
 if not TGT_POOL:
     host = get_ssm_secret(environment[0])['Parameter']['Value']
-    password = get_ssm_secret(environment[3])['Parameter']['Value']
-    user = get_ssm_secret(environment[4])['Parameter']['Value']
-    create_tgt_pool(host, password, user)
+    credential = get_ssm_secret(environment[3])['Parameter']['Value']
+    db_user = credential.get('dbUsername') if isinstance(credential, dict) else json.loads(credential).get('dbUsername')
+    db_password = credential.get('dbPassword') if isinstance(credential, dict) else json.loads(credential).get('dbPassword')
+    create_tgt_pool(host, db_password, db_user)
     logger.info("Target connection pool created successfully")
 
 
@@ -97,7 +101,6 @@ def fetch_records_from_db(query: str, schema_name: str):
                 cursor.execute(f"SET search_path TO {schema_name};")
             else:
                 raise ValueError("Schema name (tenant identifier) is mandatory")
-
             cursor.execute(query)
             records = cursor.fetchall()
             column_names = [desc[0] for desc in cursor.description]
